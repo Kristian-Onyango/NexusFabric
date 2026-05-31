@@ -1,0 +1,6 @@
+I need to update to these 
+Problem	Solution
+user deletes chunk	replication + caching
+no storage	capability filtering [look at Capabilities in earlier files]
+offline nodes	redundancy + opportunistic replication
+real files on devices	content advertisement system

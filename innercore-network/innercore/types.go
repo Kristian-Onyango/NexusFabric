@@ -20,7 +20,7 @@ type PeerInfo struct {
 	NodeID       types.NodeID       `json:"node_id"`
 	IP           string             `json:"ip"`
 	Port         int                `json:"port"`
-	Capabilities types.Capabilities `json:"capabilities"`
+	Capabilities types.Capabilities `json:"capabilities"` //capabilities of the device whether it has access to the internet or another nexus nextwork
 	LastSeen     int64              `json:"last_seen"`
 	LatencyMs    int                `json:"latency_ms"`
 	Score        float64            `json:"score"` // supernode fitness score

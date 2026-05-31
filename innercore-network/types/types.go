@@ -23,4 +23,11 @@ type Capabilities struct {
 	UplinkBandwidthMbps int   `json:"uplink_bandwidth_mbps"`
 	LatencyMs           int   `json:"latency_ms"`
 	UptimeSeconds       int64 `json:"uptime_seconds"`
+
+	//Capabilities Stretch for Storage Layer
+	StorageTotalMB     int64 `json:"storage_total_mb"`
+	StorageAvailableMB int64 `json:"storage_available_mb"`
+	CanStoreChunks     bool  `json:"can_store_chunks"`
+	CanRelayTraffic    bool  `json:"can_relay_traffic"`
+	StableNode         bool  `json:"stable_node"`
 }

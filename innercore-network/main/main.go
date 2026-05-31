@@ -12,6 +12,7 @@ import (
 	"innercore-network/discovery"
 	"innercore-network/integration"
 	"innercore-network/network"
+	"innercore-network/service"
 )
 
 func main() {
@@ -37,6 +38,31 @@ func main() {
 		defer ticker.Stop()
 		for range ticker.C {
 			network.PrintNetworkState()
+		}
+	}()
+
+	// === NexusFabric Content Tests ===
+	go func() {
+		time.Sleep(10 * time.Second)
+
+		fmt.Println("\n=== NEXUSFABRIC CONTENT TEST ===")
+
+		testData := []byte("Hello from InnerCore Mesh in Kenya! This is a test file.")
+		result, err := service.StoreContent("test.txt", "text/plain", testData, []string{"test"}, []string{"kenya", "mesh"})
+		if err != nil {
+			fmt.Printf("Publish failed: %v\n", err)
+		} else {
+			fmt.Printf("✅ Published: %s (ID: %s)\n", result.Meta.Name, result.Meta.ContentID[:16]+"...")
+		}
+
+		results := service.Search("kenya")
+		fmt.Printf("Search 'kenya' returned %d results\n", len(results))
+
+		if result != nil {
+			_, err = service.RetrieveContent(result.Meta.ContentID)
+			if err != nil {
+				fmt.Printf("Retrieval note: %v\n", err)
+			}
 		}
 	}()
 

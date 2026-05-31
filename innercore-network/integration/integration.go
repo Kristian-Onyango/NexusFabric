@@ -8,13 +8,6 @@
 // integration/integration.go
 // System Integration Layer - The brain of the InnerCore Mesh
 
-// integration/integration.go
-// integration/integration.go
-// System Integration Layer - The brain of the InnerCore Mesh
-
-// integration/integration.go
-// System Integration Layer - The brain of the InnerCore Mesh
-
 package integration
 
 import (
@@ -51,15 +44,15 @@ func Init(instanceID int) {
 	once.Do(func() {
 		integrator = &SystemIntegrator{startupTime: time.Now()}
 
-		fmt.Printf("\n=== Starting Local-First InnerCore Mesh - Instance %d ===\n", instanceID)
+		fmt.Printf("\n=== Starting Local-First InnerCore Mesh - Instance %d (NexusFabric) ===\n", instanceID)
 
 		storage.InitializeStorage()
 
-		// === IMPORTANT FOR SINGLE MACHINE TESTING ===
-		discoveryPort := 37020               // SAME port for both instances
-		messagePort := 51000 + instanceID*10 // different message ports
+		// === Multi-instance testing support ===
+		discoveryPort := 37020
+		messagePort := 51000 + instanceID*10
 
-		discovery.Init([]string{"chat"}, 5000, discoveryPort, messagePort)
+		discovery.Init([]string{"chat", "storage"}, 5000, discoveryPort, messagePort)
 
 		integrator.innerCore = innercore.New(
 			storage.GlobalStorage.GetEngine(),
@@ -71,29 +64,52 @@ func Init(instanceID int) {
 		message.KademliaHandler = integrator.innerCore.HandleKademliaPacket
 
 		discovery.UpdateNetworkCallback = func(nodeID types.NodeID, ip string, name string, caps types.Capabilities, services []string, servicePort int) {
-			// Force real IP for replies
+			// Force real IP for local multi-instance testing
 			if ip == "" || ip == "127.0.0.1" {
-				ip = "192.168.2.104" // your current local IP - change if yours is different
+				ip = "192.168.2.104" // Change to your actual local IP if needed
 			}
 			network.UpdateNode(nodeID, ip, name, caps, services, servicePort)
 			integrator.innerCore.SeedPeer(nodeID, ip, caps)
 		}
 
-		// Force self registration
+		// === Self Registration with Full NexusFabric Capabilities ===
 		selfID := discovery.GetMyNodeID()
 		selfCaps := types.Capabilities{
 			InternetAccess:      true,
 			CrossNetworkBridge:  true,
 			HotspotCapable:      true,
-			UplinkBandwidthMbps: 100,
+			UplinkBandwidthMbps: 120,
 			LatencyMs:           5,
-			UptimeSeconds:       3600,
+			UptimeSeconds:       7200,
+
+			// === NexusFabric Storage Capabilities ===
+			StorageTotalMB:     8192, // 8 GB
+			StorageAvailableMB: 6144, // 6 GB free
+			CanStoreChunks:     true,
+			CanRelayTraffic:    true,
+			StableNode:         true,
 		}
-		network.UpdateNode(selfID, "127.0.0.1", discovery.GetMyNodeName(), selfCaps, []string{"chat"}, 5000)
+
+		network.UpdateNode(selfID, "127.0.0.1", discovery.GetMyNodeName(), selfCaps, []string{"chat", "storage"}, 5000)
 		integrator.innerCore.SeedPeer(selfID, "127.0.0.1", selfCaps)
 
 		message.Init()
 		service.Init()
+
+		// Initialize Layer 3A + 3B + 3C
+		service.SetOwnerID(selfID)
+		service.InitDHTPublisher(integrator.innerCore)
+		service.InitIndex()
+
+		// Start background cleanup routines
+		go service.StartProviderCleanup() // ← Fixed: exported name
+
+		// Content Fabric is now live
+		fmt.Println("[NEXUSFABRIC] ContentStore ready for hybrid storage")
+
+		// Initialize NexusFabric DHT Publisher
+		service.InitDHTPublisher(integrator.innerCore)
+
 		integrator.resolver = resolver.NewLayer2Resolver()
 
 		integrator.gateway = fallback.NewInternetGateway("0.0.0.0", 8080+instanceID, integrator.innerCore)
@@ -101,13 +117,14 @@ func Init(instanceID int) {
 
 		integrator.running = true
 
-		fmt.Println("\n✅ System successfully started!")
-		fmt.Printf("   Instance      : %d\n", instanceID)
-		fmt.Printf("   Node ID       : %s\n", selfID)
-		fmt.Printf("   Node Name     : %s\n", discovery.GetMyNodeName())
-		fmt.Printf("   Discovery Port: %d\n", discoveryPort)
-		fmt.Printf("   Message Port  : %d\n", messagePort)
-		fmt.Println("   Status        : Operational")
+		fmt.Println("\n✅ System successfully started! (NexusFabric Ready)")
+		fmt.Printf("   Instance         : %d\n", instanceID)
+		fmt.Printf("   Node ID          : %s\n", selfID)
+		fmt.Printf("   Node Name        : %s\n", discovery.GetMyNodeName())
+		fmt.Printf("   Discovery Port   : %d\n", discoveryPort)
+		fmt.Printf("   Message Port     : %d\n", messagePort)
+		fmt.Printf("   Storage Available: %d MB\n", selfCaps.StorageAvailableMB)
+		fmt.Println("   Status           : Operational")
 	})
 }
 

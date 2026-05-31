@@ -97,8 +97,6 @@ func GetAllPeers() map[types.NodeID]*PeerEntry {
 	return copy
 }
 
-// ... rest of the file (ExpireStaleNodes, RecordSuccess, RecordFailure, PrintNetworkState, calculateScore, min, max) stays exactly as you have it
-
 func ExpireStaleNodes() {
 	networkTable.mu.Lock()
 	defer networkTable.mu.Unlock()

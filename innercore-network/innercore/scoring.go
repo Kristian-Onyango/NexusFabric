@@ -1,7 +1,7 @@
 // innercore/scoring.go
 // Supernode Election & Scoring
 //
-// This implements your core design:
+// This implements the core design:
 // Supernodes emerge naturally based on device capabilities.
 // No voting. No central authority. Every node independently computes scores.
 
@@ -12,8 +12,8 @@ import "innercore-network/types"
 // calculateScore returns a fitness score for supernode candidacy.
 // Higher score = better supernode candidate.
 //
-// Your original requirements reflected here:
-// - Cross-network bridge capability is heavily rewarded (your Africa use-case)
+// The original requirements reflected here:
+// - Cross-network bridge capability is heavily rewarded (the Africa use-case)
 // - Bandwidth and uptime matter
 // - Low latency is preferred
 func calculateScore(caps types.Capabilities) float64 {
@@ -25,7 +25,7 @@ func calculateScore(caps types.Capabilities) float64 {
 	// Uptime / stability (normalized)
 	score += float64(caps.UptimeSeconds) * 0.00008 * 0.25
 
-	// Cross-network bridge is the most important feature in your design
+	// Cross-network bridge is the most important feature in the design
 	if caps.CrossNetworkBridge {
 		score += 65.0
 	}

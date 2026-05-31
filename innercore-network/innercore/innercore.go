@@ -1,6 +1,34 @@
 // innercore/innercore.go
 package innercore
 
+//
+// Core controller of the Kademlia overlay network.
+//
+// Responsibilities:
+// - Owns all Kademlia state and routing tables
+// - Manages 256 XOR-distance k-buckets
+// - Inserts discovered peers into correct buckets
+// - Maintains preferred supernode list based on capability scoring
+// - Provides closest-peer selection for lookups
+// - Tracks async pending lookups using requestID -> channel mapping
+// - Bridges outgoing FIND_NODE requests with incoming replies
+// - Runs background maintenance and bucket refresh tasks
+// - Coordinates lookup synchronization across goroutines
+//
+// Architecture Role:
+// Discovery -> SeedPeer -> KBucket -> Lookup/RPC
+//
+// Important Concepts:
+// - XOR distance routing
+// - Kademlia bucket management
+// - Async RPC reply correlation
+// - Capability-driven supernode election
+// - Concurrent lookup coordination
+//
+// NOTE:
+// This file manages state/orchestration only.
+// Actual network transport and lookup traversal logic live elsewhere.
+
 import (
 	"fmt"
 	"sort"
@@ -216,4 +244,9 @@ func (ic *InnerCore) TestLookup(target types.NodeID) {
 	for _, p := range peers {
 		fmt.Printf("   → %s (Score: %.1f)\n", p.NodeID, p.Score)
 	}
+}
+
+// GetMyNodeID returns the current node's ID
+func (ic *InnerCore) GetMyNodeID() types.NodeID {
+	return ic.nodeID
 }
