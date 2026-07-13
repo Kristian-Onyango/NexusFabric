@@ -180,7 +180,8 @@ func SendToNode(targetID types.NodeID, payload any) error {
 			DestinationNodeID: targetID,
 			Timestamp:         time.Now().Unix(),
 		},
-		Network: packet.NetworkInfo{SourceRegion: "KE-Nairobi"},
+		Network: packet.NetworkInfo{SourceRegion: "KE-Nairobi"}, // Point to change this to automatically
+		//detect location rather than have a fixed location
 		Payload: mustMarshal(payload),
 	}
 	return SendPacket(targetID, p)
