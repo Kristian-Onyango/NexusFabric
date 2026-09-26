@@ -33,7 +33,7 @@ var (
 )
 
 var (
-	UpdateNetworkCallback func(nodeID types.NodeID, ip string, name string, caps types.Capabilities, services []string, servicePort int)
+	UpdateNetworkCallback func(nodeID types.NodeID, ip string, name string, caps types.Capabilities, services []string, servicePort int, messagePort int)
 	SeedPeerCallback      func(nodeID types.NodeID, ip string, caps types.Capabilities)
 )
 
@@ -116,7 +116,11 @@ func announceLoop(services []string, servicePort int) {
 				DestinationRegion: "UNKNOWN",
 			},
 			Capabilities: myCaps,
-			Payload:      mustMarshal(map[string]any{"services": services, "service_port": servicePort}),
+			Payload: mustMarshal(map[string]any{
+				"services":     services,
+				"service_port": servicePort,
+				"message_port": LocalMessagePort, // ← the port this node is actually listening on for Layer 4
+			}),
 		}
 
 		data, _ := json.Marshal(p)
@@ -171,8 +175,13 @@ func listenLoop() {
 			servicePort = int(sp)
 		}
 
+		messagePort := 51000 // fallback
+		if mp, ok := payloadMap["message_port"].(float64); ok {
+			messagePort = int(mp)
+		}
+
 		if UpdateNetworkCallback != nil {
-			UpdateNetworkCallback(p.Header.SourceNodeID, senderIP, "", p.Capabilities, services, servicePort)
+			UpdateNetworkCallback(p.Header.SourceNodeID, senderIP, "", p.Capabilities, services, servicePort, messagePort)
 		}
 
 		// Feed discovered peer into InnerCore for Kademlia routing table

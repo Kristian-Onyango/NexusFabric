@@ -21,9 +21,12 @@ func main() {
 
 	// Initialize the entire system
 	instanceID := 0
-	// You can pass argument from command line later
-	if len(os.Args) > 1 && os.Args[1] == "1" {
-		instanceID = 1
+
+	if len(os.Args) > 1 {
+		if _, err := fmt.Sscanf(os.Args[1], "%d", &instanceID); err != nil {
+			fmt.Println("Usage: go run . [instanceID]")
+			os.Exit(1)
+		}
 	}
 	integration.Init(instanceID)
 

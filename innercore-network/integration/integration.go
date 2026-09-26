@@ -63,12 +63,11 @@ func Init(instanceID int) {
 
 		message.KademliaHandler = integrator.innerCore.HandleKademliaPacket
 
-		discovery.UpdateNetworkCallback = func(nodeID types.NodeID, ip string, name string, caps types.Capabilities, services []string, servicePort int) {
-			// Force real IP for local multi-instance testing
+		discovery.UpdateNetworkCallback = func(nodeID types.NodeID, ip string, name string, caps types.Capabilities, services []string, servicePort int, messagePort int) {
 			if ip == "" || ip == "127.0.0.1" {
 				ip = "192.168.2.104" // Change to your actual local IP if needed
 			}
-			network.UpdateNode(nodeID, ip, name, caps, services, servicePort)
+			network.UpdateNode(nodeID, ip, name, caps, services, servicePort, messagePort)
 			integrator.innerCore.SeedPeer(nodeID, ip, caps)
 		}
 
@@ -90,7 +89,14 @@ func Init(instanceID int) {
 			StableNode:         true,
 		}
 
-		network.UpdateNode(selfID, "127.0.0.1", discovery.GetMyNodeName(), selfCaps, []string{"chat", "storage"}, 5000)
+		// Use the real message port this instance is listening on
+		selfMessagePort := discovery.LocalMessagePort
+		if selfMessagePort == 0 {
+			selfMessagePort = 51000 // safety fallback
+		}
+
+		network.UpdateNode(selfID, "127.0.0.1", discovery.GetMyNodeName(), selfCaps, []string{"chat", "storage"}, 5000, messagePort)
+
 		integrator.innerCore.SeedPeer(selfID, "127.0.0.1", selfCaps)
 
 		message.Init()

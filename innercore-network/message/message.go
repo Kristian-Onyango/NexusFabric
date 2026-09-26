@@ -94,6 +94,18 @@ func (m *MessageService) receiveLoop() {
 
 func (m *MessageService) handleIncomingPacket(pkt packet.Packet, addr *net.UDPAddr) {
 	senderID := pkt.Header.SourceNodeID
+
+	if network.GetPeer(senderID) == nil {
+		remoteIP := addr.IP.String()
+		// Prefer the remote UDP source port if available, otherwise fall back
+		msgPort := addr.Port
+		if msgPort == 0 {
+			msgPort = 51000
+		}
+		network.UpdateNode(senderID, remoteIP, "", types.Capabilities{}, nil, 5000, msgPort)
+		fmt.Printf("[NETWORK] Auto-seeded peer from incoming packet: %s @ %s\n", senderID, remoteIP)
+	}
+
 	network.RecordSuccess(senderID)
 
 	switch pkt.Header.PacketType {
@@ -121,6 +133,7 @@ func (m *MessageService) handleIncomingPacket(pkt packet.Packet, addr *net.UDPAd
 	default:
 		fmt.Printf("[MESSAGE] Unknown packet: %s\n", pkt.Header.PacketType)
 	}
+
 }
 
 func (m *MessageService) handleApplicationMessage(pkt packet.Packet, senderID types.NodeID, addr *net.UDPAddr) {
@@ -156,7 +169,11 @@ func SendPacket(targetID types.NodeID, pkt packet.Packet) error {
 
 	fmt.Printf("[SEND] → %s (%s) | Type: %s\n", targetID, peer.IP, pkt.Header.PacketType)
 
-	addr := &net.UDPAddr{IP: net.ParseIP(peer.IP), Port: discovery.LocalMessagePort}
+	port := peer.MessagePort
+	if port == 0 {
+		port = discovery.LocalMessagePort // temporary fallback while table is warming up
+	}
+	addr := &net.UDPAddr{IP: net.ParseIP(peer.IP), Port: port}
 	data, _ := json.Marshal(pkt)
 	_, err := msgService.conn.WriteToUDP(data, addr)
 	if err != nil {

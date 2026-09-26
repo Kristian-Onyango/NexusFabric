@@ -23,8 +23,8 @@ func LoadOrCreateNodeID() (types.NodeID, error) {
 
 	// Support multiple instances for testing
 	instanceSuffix := ""
-	if len(os.Args) > 1 && os.Args[1] == "1" {
-		instanceSuffix = "_instance1"
+	if len(os.Args) > 1 {
+		instanceSuffix = "_instance" + os.Args[1]
 	}
 
 	path := filepath.Join(home, ".innercore", "node_id"+instanceSuffix+".bin")

@@ -1,3 +1,4 @@
+// node/lifecycle.go
 package node
 
 func (n *Node) Start() error {

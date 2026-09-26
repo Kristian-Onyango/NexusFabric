@@ -232,7 +232,9 @@ Capacity
 Load
 Region
 Version
+```
 USED BY
+```
 ResolutionRecord
 Service Discovery
 Messaging

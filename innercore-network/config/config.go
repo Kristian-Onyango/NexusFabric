@@ -1,3 +1,5 @@
+//config.go
+
 package config
 
 type Config struct {

@@ -20,6 +20,7 @@ type PeerEntry struct {
 	LastSeen     int64
 	Services     []string
 	ServicePort  int
+	MessagePort  int
 	Capabilities types.Capabilities
 	Score        float64
 }
@@ -35,7 +36,7 @@ var networkTable = &NetworkTable{
 	nodeTimeout: 15 * time.Second,
 }
 
-func UpdateNode(nodeID types.NodeID, ip string, name string, caps types.Capabilities, services []string, servicePort int) {
+func UpdateNode(nodeID types.NodeID, ip string, name string, caps types.Capabilities, services []string, servicePort int, messagePort int) {
 	networkTable.mu.Lock()
 	defer networkTable.mu.Unlock()
 
@@ -54,6 +55,7 @@ func UpdateNode(nodeID types.NodeID, ip string, name string, caps types.Capabili
 			LastSeen:     now,
 			Services:     services,
 			ServicePort:  servicePort,
+			MessagePort:  messagePort, // ← NEW
 			Capabilities: caps,
 			Score:        calculateScore(caps),
 		}
@@ -76,6 +78,9 @@ func UpdateNode(nodeID types.NodeID, ip string, name string, caps types.Capabili
 	if len(services) > 0 {
 		entry.Services = services
 		entry.ServicePort = servicePort
+	}
+	if messagePort > 0 {
+		entry.MessagePort = messagePort
 	}
 
 	fmt.Printf("[NETWORK] Updated peer: %s (%s) IP: %s Health: %.1f\n", name, nodeID, entry.IP, entry.Health)
